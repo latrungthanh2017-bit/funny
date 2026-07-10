@@ -1,68 +1,48 @@
-# VietinBank · Hệ thống Quản trị Rủi ro Hoạt động (Demo)
+# VietinBank · Hệ thống Quản trị Rủi ro Hoạt động (app1.py)
 
-Ứng dụng minh họa mô hình **Ba vòng kiểm soát (Three Lines of Defense)** trong quản trị Rủi ro Hoạt động (RRHĐ) tại VietinBank, được xây dựng bằng Streamlit cho đề tài "Quản trị Rủi ro Hoạt động — Nghiên cứu trường hợp VietinBank".
+Ứng dụng Streamlit minh họa mô hình **Ba vòng kiểm soát (Three Lines of Defense)** trong quản trị Rủi ro Hoạt động (RRHĐ), mô phỏng cách VietinBank vận hành quy trình nhận diện — đo lường — kiểm soát — giám sát — báo cáo rủi ro.
 
-## Giới thiệu
+## Cấu trúc file
 
-Ứng dụng mô phỏng quy trình quản trị RRHĐ theo chuẩn ISO 31000 và định hướng Basel II, chia thành 3 phân hệ tương ứng với 3 vòng kiểm soát:
+### 1. Cấu hình & giao diện thương hiệu (dòng 1–140)
+- Thiết lập trang (`st.set_page_config`) với tiêu đề, icon, layout rộng.
+- Bảng màu theo bộ nhận diện VietinBank: xanh dương (`#0055A5`), xanh đậm (`#00336B`), đỏ (`#E31E24`).
+- Thang màu riêng cho ma trận nhiệt (`CTG_HEATSCALE`): từ cam nhạt (an toàn) đến đỏ (nguy hiểm).
+- Hàm `inject_css()`: tùy biến giao diện Streamlit mặc định — header, sidebar, thẻ chỉ số (metric), nút bấm, tab, form — theo phong cách nhận diện ngân hàng.
+- Hàm `render_header()`: vẽ thanh tiêu đề có logo VietinBank ở đầu mỗi trang.
+- Hàm `brand_layout()`: áp font chữ, màu nền, lưới cho các biểu đồ Plotly.
 
-| Vòng | Vai trò | Chức năng trong app |
-|---|---|---|
-| **Vòng 1** | Khối Tác nghiệp (Chi nhánh) | Ghi nhận sự kiện lỗi tác nghiệp, đánh giá định tính RCSA (khả năng xảy ra × mức độ ảnh hưởng) |
-| **Vòng 2** | Phòng Quản lý RRHĐ (TSC) | Dashboard giám sát độc lập: ma trận nhiệt RCSA 5×5, chỉ số KRI (số phàn nàn khách hàng) với ngưỡng cảnh báo |
-| **Vòng 3** | Kiểm toán Nội bộ | Lọc, trích xuất dữ liệu tổn thất, xuất báo cáo CSV, khuyến nghị cải thiện |
+### 2. Danh mục dữ liệu nghiệp vụ (dòng 143–162)
+- `ERRORS_POOL`: 6 loại lỗi tác nghiệp mẫu (giao dịch vượt thẩm quyền, lệch sổ sách kế toán, nhận diện sai khách hàng, sự cố IT, gian lận nội bộ, thiếu nhân sự quản lý).
+- `RISK_TYPES`: 6 loại rủi ro trọng yếu tương ứng.
+- `ERROR_TO_RISK_MAP`: ánh xạ mỗi lỗi cụ thể sang đúng loại rủi ro trọng yếu — mô phỏng cách phân loại sự kiện theo chuẩn Basel.
+- `BRANCHES`: danh sách 4 chi nhánh mẫu (TP.HCM, Hà Nội, Đà Nẵng, Cần Thơ).
 
-## Yêu cầu hệ thống
+### 3. Cơ sở dữ liệu giả lập (dòng 165–195)
+- Dùng `st.session_state` để lưu trữ tạm trong phiên làm việc — đóng vai trò như một "kho dữ liệu tổn thất" (loss database) thu nhỏ.
+- Khởi tạo sẵn một số sự kiện lỗi mẫu và dữ liệu KRI theo tháng (số phàn nàn khách hàng) để dashboard có dữ liệu hiển thị ngay khi mở app.
 
-- Python 3.9+
-- Các thư viện: `streamlit`, `pandas`, `numpy`, `plotly`
+### 4. Điều hướng (sidebar, dòng 196–207)
+- Menu radio cho phép chuyển giữa 3 phân hệ, tương ứng với 3 vòng kiểm soát của VietinBank.
 
-## Cài đặt
+### 5. Vòng 1 — Khối Tác nghiệp / Chi nhánh (dòng 211–253)
+Mô phỏng **người sở hữu rủi ro** trực tiếp nhận diện & kiểm soát:
+- Form nhập liệu: chọn chi nhánh, chọn lỗi tác nghiệp, đánh giá định tính theo thang 1–5 cho "khả năng xảy ra" và "mức độ ảnh hưởng" — chính là bước RCSA sơ bộ.
+- Khi bấm nút ghi nhận: hệ thống tự sinh mã sự kiện (`SKRRHĐ-1000`, `SKRRHĐ-1001`...), gắn ngày phát hiện, trạng thái mặc định "Chưa khắc phục", rồi thêm vào bảng dữ liệu chung.
+- Bảng hiển thị bên phải: danh sách 10 sự kiện gần nhất, tô màu theo trạng thái (đỏ nhạt = chưa khắc phục, xanh nhạt = đã khắc phục) để dễ theo dõi trực quan.
 
-```bash
-pip install streamlit pandas numpy plotly
-```
+### 6. Vòng 2 — Phòng Quản lý RRHĐ (dòng 258–327)
+Mô phỏng vai trò **giám sát độc lập** với 2 công cụ đo lường:
+- **3 chỉ số tổng quan**: tổng số lỗi, số lỗi đã khắc phục, tỷ lệ khắc phục kịp thời — tính động từ dữ liệu Vòng 1.
+- **Tab "Ma trận định tính RCSA"**: dựng ma trận nhiệt 5×5 (Plotly heatmap) đếm số lượng sự kiện rơi vào từng ô khả năng × ảnh hưởng — trực quan hóa việc "chốt rủi ro trọng yếu".
+- **Tab "Chỉ số định lượng KRI"**: biểu đồ đường thể hiện xu hướng số phàn nàn khách hàng qua các tháng, kèm 2 đường ngưỡng cố định (ngưỡng chấp nhận ≤40, ngưỡng nguy hiểm ≥60). Có logic cảnh báo tự động (`st.error` / `st.warning` / `st.success`) tùy theo giá trị tháng gần nhất so với ngưỡng.
 
-## Chạy ứng dụng
+### 7. Vòng 3 — Kiểm toán Nội bộ (dòng 332–361)
+Mô phỏng vai trò **đánh giá độc lập toàn hệ thống**:
+- Bộ lọc theo chi nhánh và trạng thái xử lý, hiển thị số bản ghi khớp điều kiện.
+- Nút xuất báo cáo CSV (mã hóa UTF-8-sig để hiển thị tiếng Việt đúng khi mở bằng Excel).
+- Khối khuyến nghị cố định, thể hiện quan điểm kiểm toán: đề xuất đổi cách tính KPI từ "lỗi trọng yếu" sang "tổng số lỗi ròng", và đề xuất tích lũy dữ liệu tổn thất 3–5 năm để chuẩn bị cho mô hình định lượng nâng cao (AMA/SA).
 
-```bash
-streamlit run app1.py
-```
+## Logic xuyên suốt
 
-Ứng dụng sẽ mở tại `http://localhost:8501`.
-
-## Hướng dẫn sử dụng
-
-1. **Chọn phân hệ** ở thanh điều hướng bên trái (sidebar) — tương ứng với Vòng 1, 2, hoặc 3.
-2. **Vòng 1:**
-   - Chọn chi nhánh, loại lỗi tác nghiệp từ danh mục có sẵn.
-   - Đánh giá "Khả năng xảy ra" và "Mức độ ảnh hưởng" theo thang 1–5 (RCSA).
-   - Bấm **"Ghi nhận sự kiện rủi ro"** — hệ thống tự sinh mã sự kiện (SKRRHĐ-xxxx) và lưu vào cơ sở dữ liệu phiên làm việc.
-3. **Vòng 2:**
-   - Xem 3 chỉ số tổng quan: tổng số lỗi, số lỗi đã khắc phục, tỷ lệ khắc phục.
-   - Tab "Ma trận định tính RCSA": biểu đồ nhiệt thể hiện phân bố lỗi theo tần suất × ảnh hưởng.
-   - Tab "Chỉ số định lượng KRI": biểu đồ xu hướng số phàn nàn khách hàng theo tháng, kèm cảnh báo tự động khi vượt ngưỡng (≤40: an toàn, 40–60: cảnh báo, ≥60: nguy hiểm).
-4. **Vòng 3:**
-   - Lọc dữ liệu tổn thất theo chi nhánh / trạng thái xử lý.
-   - Xuất báo cáo CSV.
-   - Xem khuyến nghị cải thiện từ góc nhìn kiểm toán nội bộ.
-
-## Lưu ý kỹ thuật
-
-- Dữ liệu được lưu bằng `st.session_state`, chỉ tồn tại trong phiên làm việc hiện tại (refresh trang sẽ mất dữ liệu vừa nhập, trừ dữ liệu khởi tạo mẫu).
-- Đây là **bản demo minh họa quy trình**, chưa kết nối cơ sở dữ liệu thật hay hệ thống core banking.
-
-## Ánh xạ với khung lý thuyết
-
-| Thành phần trong app | Khái niệm lý thuyết tương ứng |
-|---|---|
-| Form ghi nhận sự kiện (Vòng 1) | Bước 1 — Nhận diện rủi ro |
-| Slider khả năng xảy ra / ảnh hưởng | Đánh giá định tính RCSA |
-| Ma trận nhiệt 5×5 | Công cụ đo lường theo ma trận 5×5 |
-| Biểu đồ KRI + ngưỡng cảnh báo | Bước 4 — Giám sát bằng chỉ số cảnh báo sớm (KRIs) |
-| Bộ lọc + xuất CSV (Vòng 3) | Bước 5 — Báo cáo, phục vụ kiểm toán độc lập |
-
-## Tác giả
-
-Nhóm 2 — Môn Quản trị Rủi ro Ngân hàng
-GV hướng dẫn: PGS. TS. Lê Hoàng Anh
+Toàn bộ 3 phân hệ dùng **chung một nguồn dữ liệu** (`st.session_state.operational_events`) — sự kiện được Vòng 1 nhập vào sẽ ngay lập tức xuất hiện trong dashboard Vòng 2 và bộ lọc Vòng 3. Cách thiết kế này minh họa đúng nguyên tắc của mô hình 3 vòng kiểm soát: dữ liệu chảy xuyên suốt từ nơi phát sinh rủi ro đến nơi giám sát và kiểm toán, không tách rời thành các hệ thống rời rạc.
