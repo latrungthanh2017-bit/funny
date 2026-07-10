@@ -197,13 +197,10 @@ menu = st.sidebar.radio(
         "Vòng 1 · Khối Tác nghiệp (Chi nhánh)",
         "Vòng 2 · Phòng Quản lý RRHĐ (TSC)",
         "Vòng 3 · Kiểm toán Nội bộ & Báo cáo",
-        "Tích hợp Core Banking (Beta)",
     ],
 )
 st.sidebar.markdown("---")
 st.sidebar.info("💡 Ứng dụng minh hoạ trên Mô hình Ba vòng kiểm soát quốc tế (BIS) áp dụng tại VietinBank.")
-st.sidebar.caption("⚠️ Dữ liệu trong ứng dụng là dữ liệu mô phỏng (demo), không phải số liệu thực của VietinBank.")
-
 # ==========================================
 # VÒNG 1
 # ==========================================
