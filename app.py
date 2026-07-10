@@ -141,8 +141,7 @@ if menu == "Vòng 1: Khối Tác Nghiệp (Chi Nhánh)":
             color = '#FFE2E2' if val == "Chưa khắc phục" else '#E2F0D9'
             return f'background-color: {color}'
         
-        st.dataframe(df_display.style.applymap(highlight_status, subset=['Trạng thái']), use_container_width=True, height=450)
-
+        st.dataframe(df_display.style.map(highlight_status, subset=['Trạng thái']), use_container_width=True, height=450)
 # ==========================================
 # PHÂN HỆ 2: VÒNG KIỂM SOÁT THỨ HAI
 # ==========================================
