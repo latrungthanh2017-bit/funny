@@ -22,8 +22,12 @@ CTG_RED = "#E31E24"
 CTG_LIGHT = "#EAF2FB"
 
 # Thang màu ma trận nhiệt theo tông thương hiệu (ít: xanh nhạt -> nhiều: đỏ)
-CTG_HEATSCALE = [[0.0, "#F2F7FC"], [0.45, "#7FB3E0"], [0.75, "#F0A05A"], [1.0, CTG_RED]]
-
+CTG_HEATSCALE = [
+    [0.0, "#FFF5E6"],  # Cam rất nhạt (Mức độ an toàn)
+    [0.45, "#FFB74D"], # Cam vừa (Mức độ chú ý)
+    [0.75, "#F57C00"], # Cam đậm (Mức độ cảnh báo)
+    [1.0, CTG_RED]     # Đỏ VietinBank (Mức độ nguy hiểm)
+]
 
 def inject_css():
     st.markdown(
